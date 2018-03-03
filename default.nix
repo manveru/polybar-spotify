@@ -53,7 +53,7 @@ let
   };
 in pkgs.stdenv.mkDerivation {
   name = "polybar-spotify";
-  src = fetchGit ./.;
+  src = ./.;
   buildInputs = with pkgs; [
     go_1_10
   ];
@@ -63,7 +63,7 @@ in pkgs.stdenv.mkDerivation {
     set -e
     dst=$out/src/github.com/manveru/polybar-spotify
     mkdir -p $dst
-    cp -r $src/* $dst
+    cp -r $src/*.go $dst
     export GOPATH=$out
     ln -s ${depTree}/vendor $dst/vendor
     (
