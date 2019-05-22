@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/godbus/dbus"
@@ -16,7 +17,7 @@ const (
 	objPath      = "/org/mpris/MediaPlayer2"
 )
 
-var patternMatch = regexp.MustCompile(`%(\w+)%`)
+var patternMatch = regexp.MustCompile(`%([\w:]+)%`)
 
 func main() {
 	if len(os.Args) < 2 {
@@ -30,21 +31,39 @@ func main() {
 	fail(err)
 
 	obj := conn.Object(dest, objPath)
-	v, err := obj.GetProperty(propMetadata)
+	objValue, err := obj.GetProperty(propMetadata)
 	fail(err)
-	value := v.Value().(map[string]dbus.Variant)
+	objValues := objValue.Value().(map[string]dbus.Variant)
 
-	data := map[string]string{
-		"%artist%": value["xesam:artist"].Value().([]string)[0],
-		"%title%":  value["xesam:title"].Value().(string),
-		"%album%":  value["xesam:album"].Value().(string),
-		"%artUrl%": value["mpris:artUrl"].Value().(string),
-		"%url%":    value["xesam:url"].Value().(string),
+	data := map[string]string{}
+	keys := []string{}
+
+	for dataName, dataValue := range objValues {
+		keys = append(keys, dataName)
+		switch v := dataValue.Value().(type) {
+		case string:
+			data["%"+dataName+"%"] = v
+		case []string:
+			data["%"+dataName+"%"] = strings.Join(v, ", ")
+		case int32:
+			data["%"+dataName+"%"] = strconv.FormatInt(int64(v), 10)
+		case uint64:
+			data["%"+dataName+"%"] = strconv.FormatUint(v, 10)
+		case int64:
+			data["%"+dataName+"%"] = strconv.FormatInt(v, 10)
+		case float64:
+			data["%"+dataName+"%"] = strconv.FormatFloat(v, 'f', 3, 64)
+		default:
+			fmt.Printf("%t\n", v)
+		}
 	}
 
 	result := patternMatch.ReplaceAllStringFunc(pattern, func(match string) string {
 		if found, ok := data[match]; ok {
 			return found
+		} else {
+			fmt.Printf("Key '%s' not found, possible keys are: %v\n", match, keys)
+			os.Exit(1)
 		}
 		return ""
 	})
