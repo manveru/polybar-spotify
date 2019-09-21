@@ -20,20 +20,18 @@ const (
 var patternMatch = regexp.MustCompile(`%([\w:]+)%`)
 
 func main() {
+	showSong()
+}
+
+func showSong() {
 	if len(os.Args) < 2 {
-		fmt.Println("Need pattern to return, using any of %artist% %title% %album% %artUrl% %url%")
+		fmt.Println("Need pattern to format the output, like %artist% %title% %album% %artUrl% %url%")
 		os.Exit(1)
 	}
 
 	pattern := strings.Join(os.Args[1:], " ")
 
-	conn, err := dbus.SessionBus()
-	fail(err)
-
-	obj := conn.Object(dest, objPath)
-	objValue, err := obj.GetProperty(propMetadata)
-	fail(err)
-	objValues := objValue.Value().(map[string]dbus.Variant)
+	objValues := getCurrent()
 
 	data := map[string]string{}
 	keys := []string{}
@@ -75,4 +73,20 @@ func fail(err error) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
+
+func getCurrent() map[string]dbus.Variant {
+	conn, err := dbus.SessionBus()
+	fail(err)
+
+	obj := conn.Object(dest, objPath)
+	objValue, err := obj.GetProperty(propMetadata)
+	if err != nil {
+		if err.Error() == "The name org.mpris.MediaPlayer2.spotify was not provided by any .service files" {
+			fmt.Println("spotify not running")
+			os.Exit(1)
+		}
+		fail(err)
+	}
+	return objValue.Value().(map[string]dbus.Variant)
 }

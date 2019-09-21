@@ -7,5 +7,5 @@ in buildGoModule {
   pname = "polybar-spotify";
   version = "0.2.0";
   src = srcWithout ./. [ ./result ./.git ./default.nix ];
-  modSha256 = "0cmiy6zbwrdnhni60mgv8xlb0fbr4glpbwir2zdjz9hyma45vz35";
+  modSha256 = "060qclqn219i4lfm8w9dn1f4fzsn90m63m5yg001vpcya7csqijn";
 }

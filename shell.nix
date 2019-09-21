@@ -1,11 +1,18 @@
 with import (fetchTarball {
-  url = https://github.com/NixOS/nixpkgs-channels/archive/3265226fec3bd568d5828485c03e15e2e87d3d12.tar.gz;
-  sha256 = "10rmdj6zbh9da4rhrs77yhvckjlpfqbz5208zdjysvlv28wj9yd5";
+  url = https://github.com/nixos/nixpkgs-channels/archive/00ef72610c82dd0ea69f2bc3f70445483acca0d0.tar.gz;
+  sha256 = "0i4kqf5hx7zgd1cf2sj2zaalf7rmd246l664r2wc26w56ya5z1nv";
 }) {};
 stdenv.mkDerivation {
   name = "polybar-spotify";
-  buildInputs = [ go_1_10 dep ];
+  buildInputs = [
+    go_1_12
+    (gocode.override { buildGoPackage = buildGo112Package; })
+    (gocode-gomod.override { buildGoPackage = buildGo112Package; })
+    cacert
+    pkgconfig
+    libxml2
+  ];
   shellHook = ''
-    export GOPATH="$HOME/go"
+    unset GOPATH
   '';
 }
